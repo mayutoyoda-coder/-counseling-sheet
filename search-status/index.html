@@ -2,124 +2,226 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>検索ステータス履歴</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--PREVIEW-START-->
+<title>検索ステータス年表</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
+/* レイアウト: 左揃えの「年表ノート」。カードで囲まず、余白と目盛りで区切る。年表が主役、その下にカレンダー・仕組み・切り分け表 */
 :root {
   color-scheme: light;
-  --page: #f9f9f7;
-  --surface: #fcfcfb;
-  --ink: #0b0b0b;
-  --ink-2: #52514e;
-  --muted: #898781;
-  --grid: #e1e0d9;
-  --axis: #c3c2b7;
-  --border: rgba(11,11,11,0.10);
-  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4;
-  --critical: #d03b3b;
+  --bg: #f5f6f8;
+  --paper: #ffffff;
+  --ink: #141820;
+  --ink-2: #4a5362;
+  --muted: #7f8794;
+  --rule: #dde1e8;
+  --rule-strong: #b9c0cb;
+  --empty: #e9ecf1;
+  --rank: #2a78d6;
+  --crawl: #eb6834;
+  --index: #1baf7a;
+  --serve: #eda100;
+  --other: #e87ba4;
+  --live: #d03b3b;
+  --display: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --body: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7;
-    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
-    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+    --bg: #0f1217; --paper: #161a21; --ink: #eef1f5; --ink-2: #aab2be; --muted: #7f8794;
+    --rule: #262c36; --rule-strong: #3a4250; --empty: #1f242d;
+    --rank: #3987e5; --crawl: #d95926; --index: #199e70; --serve: #c98500; --other: #d55181;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7;
-  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
-  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+  --bg: #0f1217; --paper: #161a21; --ink: #eef1f5; --ink-2: #aab2be; --muted: #7f8794;
+  --rule: #262c36; --rule-strong: #3a4250; --empty: #1f242d;
+  --rank: #3987e5; --crawl: #d95926; --index: #199e70; --serve: #c98500; --other: #d55181;
 }
 * { box-sizing: border-box; }
-body {
-  margin: 0; background: var(--page); color: var(--ink);
-  font: 14px/1.6 system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
-}
-main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 64px; }
-h1 { font-size: 22px; margin: 0 0 4px; }
-h2 { font-size: 15px; margin: 0 0 12px; }
-.meta { color: var(--ink-2); font-size: 12px; margin: 0 0 20px; }
-.meta a, td a { color: inherit; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-.filters { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 16px; }
-.filters label { font-size: 13px; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
-select, input[type=search] {
-  font: inherit; color: var(--ink); background: var(--surface);
-  border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px;
-}
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.75 var(--body); }
+main { max-width: 1160px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 80px; display: grid; gap: 56px; }
+main > * { min-width: 0; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--rank); outline-offset: 2px; }
+
+/* ヘッダー */
+.masthead { display: grid; gap: 14px; }
+.masthead h1 { font: 900 clamp(26px, 4.5vw, 40px)/1.2 var(--display); margin: 0; letter-spacing: .02em; text-wrap: balance; }
+.masthead .lede { margin: 0; color: var(--ink-2); max-width: 62ch; }
+.now { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding-block: 12px; border-block: 1px solid var(--rule); }
+.now .k { font: 700 12px/1 var(--display); letter-spacing: .12em; color: var(--muted); }
+.now .live { color: var(--live); font-weight: 700; }
+.now .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--live); margin-right: 6px; vertical-align: 1px; }
+.now .meta { font: 12px var(--mono); color: var(--muted); margin-left: auto; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 4px 20px; font-size: 13px; }
+nav.toc a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid transparent; }
+nav.toc a:hover { color: var(--ink); border-color: currentColor; }
+.sample { margin: 0; font-size: 13px; color: var(--ink); background: var(--empty); padding: 8px 12px; border-radius: 6px; }
+
+/* セクション見出し */
+.sec-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-bottom: 14px; }
+.sec-head h2 { font: 700 22px/1.3 var(--display); margin: 0; letter-spacing: .02em; }
+.sec-head p { margin: 0; color: var(--ink-2); font-size: 13px; }
+
+/* フィルタ */
+.filters { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 18px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip {
-  font: inherit; font-size: 13px; color: var(--ink); background: var(--surface);
-  border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 6px;
+  font: inherit; font-size: 13px; color: var(--ink); background: var(--paper);
+  border: 1px solid var(--rule-strong); border-radius: 4px; padding: 3px 10px 3px 8px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px;
 }
-.chip[aria-pressed="false"] { color: var(--muted); }
+.chip[aria-pressed="false"] { color: var(--muted); border-color: var(--rule); background: transparent; }
 .chip[aria-pressed="false"] .sw { opacity: .25; }
-.sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
-.tile .v { font-size: 28px; font-weight: 600; line-height: 1.2; }
-.tile .l { font-size: 12px; color: var(--ink-2); }
-.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--ink-2); margin-bottom: 8px; }
-.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 4px; height: 14px; border-radius: 2px; display: inline-block; flex: none; }
+.sw.sq { width: 10px; height: 10px; }
+.filters label { font-size: 13px; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
+select, input[type=search] {
+  font: inherit; font-size: 13px; color: var(--ink); background: var(--paper);
+  border: 1px solid var(--rule-strong); border-radius: 4px; padding: 4px 8px;
+}
+
 .scroll { overflow-x: auto; }
-svg text { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
-svg .lane { fill: var(--ink-2); font-size: 12px; }
+svg text { fill: var(--muted); font: 11px var(--mono); }
+svg .year { fill: var(--ink); font: 700 18px var(--display); }
+svg .lane { fill: var(--ink-2); font: 700 12px var(--display); }
+svg .bar-label { fill: var(--ink); font: 12px var(--body); }
 svg .hit { cursor: pointer; }
-.empty { color: var(--ink-2); padding: 24px 0; text-align: center; }
+.empty { color: var(--ink-2); padding: 24px 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ink-2); margin-top: 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* 仕組み */
+.flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); overflow: hidden; }
+.stage {
+  font: inherit; color: inherit; text-align: left; background: transparent; border: 0; border-right: 1px solid var(--rule);
+  padding: 16px 18px 18px; cursor: pointer; display: grid; gap: 6px; align-content: start; position: relative;
+}
+.stage:last-child { border-right: 0; }
+.stage:hover, .stage[aria-current="true"] { background: var(--empty); }
+.stage .step { font: 500 11px var(--mono); color: var(--muted); letter-spacing: .08em; }
+.stage .name { font: 700 18px/1.3 var(--display); display: flex; align-items: center; gap: 8px; }
+.stage .name .sw { height: 18px; }
+.stage .what { font-size: 13px; color: var(--ink-2); line-height: 1.6; }
+.stage .sub { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.stage .sub span { font-size: 11px; border: 1px solid var(--rule-strong); border-radius: 3px; padding: 0 6px; color: var(--ink-2); }
+.stage .count { font: 12px var(--mono); color: var(--muted); }
+.stage:not(:last-child)::after {
+  content: "→"; position: absolute; right: -9px; top: 18px; z-index: 1; font: 14px var(--mono);
+  color: var(--muted); background: var(--paper); line-height: 18px; width: 18px; text-align: center;
+}
+@media (max-width: 860px) {
+  .stage { border-right: 0; border-bottom: 1px solid var(--rule); }
+  .stage:last-child { border-bottom: 0; }
+  .stage:not(:last-child)::after { content: "↓"; right: 18px; top: auto; bottom: -10px; }
+}
+.detail { margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px 32px; }
+.detail > div { min-width: 0; }
+.detail h3 { font: 700 13px/1.4 var(--display); letter-spacing: .08em; color: var(--muted); margin: 0 0 6px; }
+.detail p, .detail ul { margin: 0; font-size: 14px; }
+.detail ul { padding-left: 1.1em; display: grid; gap: 4px; }
+.detail dl { margin: 0; display: grid; gap: 8px; font-size: 14px; }
+.detail dt { font-weight: 700; }
+.detail dd { margin: 0; color: var(--ink-2); }
+.detail .path { font: 12px var(--mono); color: var(--ink-2); }
+.src { font-size: 12px; color: var(--muted); margin: 14px 0 0; }
+
+/* 表 */
+table { width: 100%; min-width: 680px; border-collapse: collapse; font-size: 13px; background: var(--paper); }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font: 700 12px var(--display); color: var(--muted); letter-spacing: .06em; white-space: nowrap; background: var(--bg); border-bottom-color: var(--rule-strong); }
+td.n { font: 12px var(--mono); white-space: nowrap; }
+td .cat { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.ongoing { color: var(--live); font-weight: 700; }
+details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; margin-bottom: 10px; }
+
 #tip {
-  position: fixed; pointer-events: none; z-index: 10; max-width: 320px;
-  background: var(--surface); color: var(--ink); border: 1px solid var(--border);
-  border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.15);
+  position: fixed; pointer-events: none; z-index: 10; max-width: 300px;
+  background: var(--ink); color: var(--bg); border-radius: 6px; padding: 8px 10px; font-size: 12px; line-height: 1.5;
   display: none;
 }
-#tip b { display: block; margin-bottom: 2px; }
-#tip .d { color: var(--ink-2); }
-table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 13px; }
-th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
-th { color: var(--ink-2); font-weight: 600; white-space: nowrap; }
-td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
-.ongoing { color: var(--critical); font-weight: 600; }
+#tip b { display: block; font-weight: 700; }
+#tip .d { opacity: .8; font-family: var(--mono); }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 </style>
+<!--HEAD-END-->
 </head>
 <body>
 <main>
-  <h1>Google 検索ステータス 履歴ビューア</h1>
-  <p class="meta" id="meta">読み込み中…</p>
+  <header class="masthead">
+    <h1>検索ステータス年表</h1>
+    <p class="lede">Google 検索のランキング更新と、クロール・インデックス登録・表示の障害を時系列で並べました。順位が動いた時期と照らし合わせて、自社サイトの問題か Google 側の動きかを切り分けるためのページです。</p>
+    <!--SAMPLE-NOTE-->
+    <div class="now" id="now"></div>
+    <nav class="toc" aria-label="ページ内">
+      <a href="#timeline-sec">年表</a><a href="#calendar-sec">カレンダー</a><a href="#how">検索の仕組み</a><a href="#triage">順位が落ちたとき</a><a href="#list">一覧</a>
+    </nav>
+  </header>
 
-  <div class="filters">
-    <div class="chips" id="chips" role="group" aria-label="カテゴリ"></div>
-    <label>期間
-      <select id="range">
-        <option value="all">全期間</option>
-        <option value="365">直近1年</option>
-        <option value="730" selected>直近2年</option>
-        <option value="1095">直近3年</option>
-      </select>
-    </label>
-    <label>キーワード <input type="search" id="q" placeholder="core, spam など"></label>
-  </div>
-
-  <div class="tiles" id="tiles"></div>
-
-  <section class="card">
-    <h2>タイムライン（開始〜終了）</h2>
+  <section id="timeline-sec">
+    <div class="sec-head"><h2>年表</h2><p>バーは開始から終了まで。点線は進行中です。</p></div>
+    <div class="filters">
+      <div class="chips" id="chips" role="group" aria-label="カテゴリ"></div>
+      <label>期間
+        <select id="range">
+          <option value="all">全期間</option>
+          <option value="365">直近1年</option>
+          <option value="730" selected>直近2年</option>
+          <option value="1095">直近3年</option>
+        </select>
+      </label>
+      <label>キーワード <input type="search" id="q" placeholder="core, spam など"></label>
+    </div>
     <div class="scroll"><div id="timeline"></div></div>
   </section>
 
-  <section class="card">
-    <h2>年別の件数</h2>
-    <div class="legend" id="legend"></div>
-    <div class="scroll"><div id="yearly"></div></div>
+  <section id="calendar-sec">
+    <div class="sec-head"><h2>カレンダー</h2><p>1マスが1日です。色が付いた日は、何かが展開中または発生中でした。</p></div>
+    <div class="scroll"><div id="calendar"></div></div>
+    <div class="legend" id="cal-legend"></div>
   </section>
 
-  <section class="card">
-    <h2>一覧</h2>
-    <div class="scroll"><table id="table"></table></div>
+  <section id="how">
+    <div class="sec-head"><h2>検索の仕組み</h2><p>ステータスの4カテゴリは、Google がページを検索結果に出すまでの段階に対応しています。段階を選ぶと、年表もその段階に絞り込まれます。</p></div>
+    <div class="flow" id="flow"></div>
+    <div class="detail" id="detail"></div>
+    <p class="src">参考: Google 検索セントラル「Google 検索の仕組み」「コアアップデートについて」「クロールの統計情報レポート」</p>
+  </section>
+
+  <section id="triage">
+    <div class="sec-head"><h2>順位や表示回数が落ちたとき</h2><p>症状から、疑う段階と照らし合わせる履歴を引けます。</p></div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>症状</th><th>疑う段階</th><th>年表で見るもの</th><th>次にやること</th></tr></thead>
+        <tbody>
+          <tr><td>新しい記事がなかなか検索に出ない</td><td>クロール / インデックス登録</td><td>同じ時期のクロール・インデックス登録の障害</td><td>URL 検査で「前回のクロール」日時と登録状況を見る。障害中なら解消を待ってから再リクエスト</td></tr>
+          <tr><td>サイト全体の表示回数が数日だけ急に落ち、戻った</td><td>検索結果の表示</td><td>同じ日の表示の障害</td><td>他のサイトでも同じ谷が出ているか確認する。障害と重なっていれば対応は不要なことが多い</td></tr>
+          <tr><td>特定のキーワード群の順位がじわじわ下がった</td><td>ランキング</td><td>コアアップデートなどの展開期間</td><td>展開完了から1週間ほど待ち、展開前の同じ長さの期間と比べる。下がったページの内容と検索意図のずれを見直す</td></tr>
+          <tr><td>クロールの統計情報でリクエスト数が急に減った</td><td>クロール</td><td>同じ時期のクロールの障害</td><td>障害がなければ自社サーバーの 5xx・429 やタイムアウトを疑い、サーバーログとホストのステータスを見る</td></tr>
+          <tr><td>「クロール済み - インデックス未登録」が増えた</td><td>インデックス登録</td><td>インデックス登録の障害（なければ自社要因）</td><td>重複ページ、canonical の指定、内容の薄いページがないか見直す</td></tr>
+          <tr><td>リッチリザルト（星やFAQ表示など）が急に消えた</td><td>検索結果の表示</td><td>表示の障害、ランキング更新</td><td>リッチリザルトテストで構造化データを確認する。エラーがなければ障害や仕様変更を疑う</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="list">
+    <div class="sec-head"><h2>一覧</h2><p>年表の絞り込みがそのまま反映されます。</p></div>
+    <details open>
+      <summary id="list-summary">一覧を表示</summary>
+      <div class="scroll"><table id="table"></table></div>
+    </details>
   </section>
 </main>
-<div id="tip"></div>
+<div id="tip" role="tooltip"></div>
 
 <script src="data/incidents.js"></script>
 <script>
@@ -128,67 +230,72 @@ td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
   const DAY = 864e5;
   const NOW = Date.now();
 
-  // カテゴリ名 → 表示名と色（色はカテゴリに固定。フィルタしても塗り替えない）
-  const KNOWN = [
-    ["Ranking", "ランキング"],
-    ["Crawling", "クロール"],
-    ["Indexing", "インデックス登録"],
-    ["Serving", "検索結果の表示"],
+  // カテゴリ定義（色はカテゴリに固定。絞り込んでも塗り替えない）
+  const CATS = [
+    { key: "Crawling", ja: "クロール", color: "var(--crawl)" },
+    { key: "Indexing", ja: "インデックス登録", color: "var(--index)" },
+    { key: "Serving", ja: "検索結果の表示", color: "var(--serve)" },
+    { key: "Ranking", ja: "ランキング", color: "var(--rank)" },
   ];
-  const label = p => (KNOWN.find(k => k[0].toLowerCase() === String(p).toLowerCase()) || [p, p])[1];
-  const all = DATA.incidents.map(i => ({
-    ...i,
-    b: Date.parse(i.begin),
-    e: i.end ? Date.parse(i.end) : null,
-  })).filter(i => !isNaN(i.b));
+  const catOf = p => CATS.find(c => c.key.toLowerCase() === String(p).toLowerCase());
+  const label = p => catOf(p)?.ja ?? p;
+  const color = p => catOf(p)?.color ?? "var(--other)";
+  // カレンダーで重なった日の優先順（ランキング更新を一番上に）
+  const PRIORITY = ["Ranking", "Indexing", "Crawling", "Serving"];
 
-  const products = [...new Set(all.map(i => i.product))].sort((a, b) => {
-    const ia = KNOWN.findIndex(k => k[0] === a), ib = KNOWN.findIndex(k => k[0] === b);
-    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || String(a).localeCompare(b);
-  });
-  // 5色を超えるカテゴリは同じ「その他」色にまとめる
-  const color = p => `var(--s${Math.min(products.indexOf(p), 4) + 1})`;
+  const all = DATA.incidents.map(i => ({ ...i, b: Date.parse(i.begin), e: i.end ? Date.parse(i.end) : null }))
+    .filter(i => !isNaN(i.b));
+  const known = CATS.map(c => c.key);
+  const products = [...known.filter(k => all.some(i => i.product === k)),
+    ...[...new Set(all.map(i => i.product))].filter(p => !known.includes(p)).sort()];
+  if (!products.length) products.push(...known);
 
   const params = new URLSearchParams(location.search);
   const want = params.get("product");
-  const active = new Set(products.filter(p => !want || p.toLowerCase() === want.toLowerCase()
-    || all.some(i => i.product === p && i.product_id === want)));
+  const active = new Set(products.filter(p => !want || p.toLowerCase() === want.toLowerCase()));
   if (!active.size) products.forEach(p => active.add(p));
 
   const $ = id => document.getElementById(id);
   const fmt = t => new Date(t).toLocaleDateString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit" });
   const days = i => ((i.e ?? NOW) - i.b) / DAY;
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const svgEl = (tag, attrs, parent) => {
+    const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    parent && parent.append(el);
+    return el;
+  };
 
-  $("meta").innerHTML = DATA.fetched_at
-    ? `最終取得: ${new Date(DATA.fetched_at).toLocaleString("ja-JP")}　｜　出典: <a href="https://status.search.google.com/?hl=ja" target="_blank" rel="noopener">Google 検索ステータス ダッシュボード</a>`
-    : "まだデータがありません。GitHub Actions の「Update Google Search Status data」を手動実行してください。";
+  // いまの状況
+  const live = all.filter(i => !i.e).sort((a, b) => a.b - b.b);
+  $("now").innerHTML = `<span class="k">いま</span>` + (live.length
+    ? live.map(i => `<span class="live"><span class="dot"></span>${esc(label(i.product))}：${esc(i.title)}（${Math.floor(days(i)) + 1}日目）</span>`).join("")
+    : `<span>進行中のアップデートや障害はありません</span>`)
+    + `<span class="meta">${DATA.fetched_at ? "最終取得 " + new Date(DATA.fetched_at).toLocaleString("ja-JP") : "データ未取得"}</span>`;
 
-  // カテゴリのチップ
+  // ツールチップ
+  const tip = $("tip");
+  const showTip = (ev, html) => {
+    tip.innerHTML = html; tip.style.display = "block";
+    const x = Math.min(ev.clientX + 12, innerWidth - tip.offsetWidth - 8);
+    const y = ev.clientY + 16 + tip.offsetHeight > innerHeight ? ev.clientY - tip.offsetHeight - 12 : ev.clientY + 16;
+    tip.style.left = Math.max(8, x) + "px"; tip.style.top = y + "px";
+  };
+  const hideTip = () => tip.style.display = "none";
+  const incTip = i => `<b>${esc(i.title)}</b><span class="d">${esc(label(i.product))}　${fmt(i.b)} 〜 ${i.e ? fmt(i.e) : "進行中"}（${days(i).toFixed(1)}日）</span>`;
+
+  // フィルタ
+  const chipEls = {};
   products.forEach(p => {
     const b = document.createElement("button");
-    b.className = "chip";
+    b.className = "chip"; b.type = "button";
     b.innerHTML = `<span class="sw" style="background:${color(p)}"></span>${esc(label(p))}`;
-    b.setAttribute("aria-pressed", active.has(p));
-    b.onclick = () => {
-      active.has(p) ? active.delete(p) : active.add(p);
-      b.setAttribute("aria-pressed", active.has(p));
-      render();
-    };
+    b.onclick = () => { active.has(p) ? active.delete(p) : active.add(p); render(); };
+    chipEls[p] = b;
     $("chips").append(b);
   });
   $("range").onchange = render;
   $("q").oninput = render;
-
-  const tip = $("tip");
-  function showTip(ev, i) {
-    tip.innerHTML = `<b>${esc(i.title)}</b><div class="d">${esc(label(i.product))}<br>${fmt(i.b)} 〜 ${i.e ? fmt(i.e) : "継続中"}（${days(i).toFixed(1)}日）</div>`;
-    tip.style.display = "block";
-    const x = Math.min(ev.clientX + 12, innerWidth - tip.offsetWidth - 8);
-    const y = ev.clientY + 16 + tip.offsetHeight > innerHeight ? ev.clientY - tip.offsetHeight - 12 : ev.clientY + 16;
-    tip.style.left = x + "px"; tip.style.top = y + "px";
-  }
-  const hideTip = () => tip.style.display = "none";
 
   function filtered() {
     const r = $("range").value;
@@ -197,162 +304,252 @@ td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
     return all.filter(i => active.has(i.product) && (i.e ?? NOW) >= from
       && (!q || (i.title + " " + (i.updates || []).map(u => u.text).join(" ")).toLowerCase().includes(q)));
   }
-
-  function svgEl(tag, attrs, parent) {
-    const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
-    for (const k in attrs) el.setAttribute(k, attrs[k]);
-    parent && parent.append(el);
-    return el;
+  function span(list) {
+    const r = $("range").value;
+    return [r === "all" ? Math.min(NOW - 365 * DAY, ...list.map(i => i.b)) : NOW - r * DAY, NOW];
   }
 
-  function renderTiles(list) {
-    const done = list.filter(i => i.e);
-    const avg = done.length ? done.reduce((s, i) => s + days(i), 0) / done.length : 0;
-    const ongoing = list.filter(i => !i.e).length;
-    const rank = list.filter(i => i.product === "Ranking").length;
-    $("tiles").innerHTML = [
-      [list.length, "件（表示中）"],
-      [rank, "ランキング関連"],
-      [done.length ? avg.toFixed(1) + "日" : "–", "平均の期間"],
-      [ongoing, ongoing ? "継続中" : "継続中のもの"],
-    ].map(([v, l]) => `<div class="card tile"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
-  }
+  // 文字幅の計測（年表のラベル配置用）
+  const ctx = document.createElement("canvas").getContext("2d");
+  const textW = s => { ctx.font = '12px "BIZ UDPGothic", sans-serif'; return ctx.measureText(s).width; };
 
+  // ---- 年表 ----
   function renderTimeline(list) {
     const box = $("timeline");
     box.innerHTML = "";
-    if (!list.length) { box.innerHTML = '<p class="empty">該当するデータがありません</p>'; return; }
-    const r = $("range").value;
-    const x0 = r === "all" ? Math.min(...list.map(i => i.b)) : NOW - r * DAY;
-    const x1 = NOW;
-    const W = Math.max(box.parentElement.clientWidth, 640), padL = 112, padR = 12, laneGap = 10, rowH = 14;
-
-    // カテゴリごとに、重なる期間を別の段に詰める
-    const lanes = products.filter(p => active.has(p)).map(p => {
-      const rows = [];
-      list.filter(i => i.product === p).sort((a, b) => a.b - b.b).forEach(i => {
-        let k = rows.findIndex(end => end + DAY < i.b);
-        if (k < 0) { k = rows.length; rows.push(0); }
-        rows[k] = i.e ?? NOW; i._row = k;
-      });
-      return { p, rows: Math.max(rows.length, 1) };
-    }).filter(l => list.some(i => i.product === l.p));
-
-    const H = 24 + lanes.reduce((s, l) => s + l.rows * (rowH + 4) + laneGap * 2, 0);
+    if (!list.length) { box.innerHTML = '<p class="empty">条件に合う記録はありません。カテゴリや期間を広げてください。</p>'; return; }
+    const [x0, x1] = span(list);
+    const W = Math.max(box.parentElement.clientWidth, 760), padL = 120, padR = 16, top = 40;
     const sx = t => padL + (Math.max(t, x0) - x0) / (x1 - x0) * (W - padL - padR);
-    const svg = svgEl("svg", { width: W, height: H, role: "img", "aria-label": "インシデントのタイムライン" }, box);
 
-    // 年・月の目盛り
+    // 行の割り当て。ランキングはラベル付きの太いバー、それ以外は細い帯
+    const lanes = products.filter(p => active.has(p) && list.some(i => i.product === p))
+      .sort((a, b) => (a === "Ranking" ? -1 : b === "Ranking" ? 1 : 0))
+      .map(p => {
+        const main = p === "Ranking";
+        const rows = [];
+        list.filter(i => i.product === p).sort((a, b) => a.b - b.b).forEach(i => {
+          const bx = sx(i.b), ex = Math.max(sx(i.e ?? NOW), bx + 4);
+          let lx = ex + 6, end = ex + 2;
+          i._label = null;
+          if (main) {
+            const w = textW(i.title);
+            if (lx + w > W - padR) lx = bx - 6 - w; // 右端に入らなければ左側へ
+            if (lx >= padL) { i._label = { x: lx, w }; end = Math.max(ex, lx + w) + 10; }
+          }
+          const start = i._label ? Math.min(bx, i._label.x) : bx;
+          let k = rows.findIndex(r => r < start);
+          if (k < 0) { k = rows.length; rows.push(0); }
+          rows[k] = end; i._row = k; i._bx = bx; i._ex = ex;
+        });
+        return { p, main, rows: Math.max(rows.length, 1), rowH: main ? 24 : 10 };
+      });
+
+    const laneGap = 18;
+    const H = top + lanes.reduce((s, l) => s + l.rows * l.rowH + laneGap, 0) + 8;
+    const svg = svgEl("svg", { width: W, height: H, role: "img", "aria-label": "アップデートと障害の年表" }, box);
+
+    // 年と月の目盛り
     const spanYears = (x1 - x0) / DAY / 365;
-    const d = new Date(x0); d.setDate(1); d.setHours(0, 0, 0, 0);
-    const step = spanYears > 4 ? 12 : spanYears > 1.5 ? 3 : 1;
-    d.setMonth(Math.ceil(d.getMonth() / step) * step);
-    for (; d.getTime() <= x1; d.setMonth(d.getMonth() + step)) {
+    const d = new Date(x0); d.setDate(1); d.setHours(0, 0, 0, 0); d.setMonth(d.getMonth() + 1);
+    for (; d.getTime() <= x1; d.setMonth(d.getMonth() + 1)) {
       const x = sx(d.getTime());
-      if (x < padL || x > W - padR - 28) continue;
-      svgEl("line", { x1: x, x2: x, y1: 0, y2: H - 20, stroke: "var(--grid)" }, svg);
-      const t = svgEl("text", { x: x + 3, y: H - 6 }, svg);
-      t.textContent = d.getMonth() === 0 || step === 12 ? `${d.getFullYear()}` : `${d.getMonth() + 1}月`;
+      const jan = d.getMonth() === 0;
+      svgEl("line", { x1: x, x2: x, y1: jan ? 6 : top - 8, y2: H, stroke: jan ? "var(--rule-strong)" : "var(--rule)" }, svg);
+      if (jan) {
+        const t = svgEl("text", { x: x + 6, y: 22, class: "year" }, svg); t.textContent = d.getFullYear();
+      } else if (spanYears <= 3.2 && d.getMonth() % (spanYears > 1.5 ? 3 : 1) === 0 && x < W - padR - 24) {
+        const t = svgEl("text", { x: x + 4, y: top - 12 }, svg); t.textContent = `${d.getMonth() + 1}月`;
+      }
     }
+    // 今日
+    svgEl("line", { x1: sx(NOW), x2: sx(NOW), y1: top - 8, y2: H, stroke: "var(--live)", "stroke-dasharray": "2 3" }, svg);
 
-    let y = laneGap;
+    let y = top;
     lanes.forEach(l => {
-      const t = svgEl("text", { x: 0, y: y + rowH - 2, class: "lane" }, svg);
-      t.textContent = label(l.p);
+      const lt = svgEl("text", { x: 0, y: y + (l.main ? 16 : 9), class: "lane" }, svg);
+      lt.textContent = label(l.p);
       list.filter(i => i.product === l.p).forEach(i => {
-        const bx = sx(i.b), ex = sx(i.e ?? NOW), by = y + i._row * (rowH + 4);
-        const w = Math.max(ex - bx, 4);
-        svgEl("rect", { x: bx, y: by, width: w, height: rowH, rx: 4, fill: color(l.p),
-          stroke: "var(--surface)", "stroke-width": 1, ...(i.e ? {} : { "stroke-dasharray": "3 2" }) }, svg);
-        const hit = svgEl("rect", { x: bx - 3, y: by - 2, width: w + 6, height: rowH + 4, fill: "transparent", class: "hit" }, svg);
-        hit.onmousemove = ev => showTip(ev, i);
+        const by = y + i._row * l.rowH;
+        const bh = l.main ? 12 : 6, cy = by + (l.main ? 5 : 1);
+        svgEl("rect", { x: i._bx, y: cy, width: i._ex - i._bx, height: bh, rx: l.main ? 3 : 2, fill: color(l.p),
+          ...(i.e ? {} : { "fill-opacity": .55, stroke: color(l.p), "stroke-dasharray": "3 2" }) }, svg);
+        if (i._label) {
+          const t = svgEl("text", { x: i._label.x, y: cy + 10, class: "bar-label" }, svg); t.textContent = i.title;
+        }
+        const hx = i._label ? Math.min(i._bx, i._label.x) : i._bx;
+        const hw = (i._label ? Math.max(i._ex, i._label.x + i._label.w) : i._ex) - hx;
+        const hit = svgEl("rect", { x: hx - 3, y: by, width: hw + 6, height: l.rowH, fill: "transparent", class: "hit" }, svg);
+        hit.onmousemove = ev => showTip(ev, incTip(i));
         hit.onmouseleave = hideTip;
-        if (i.url) hit.onclick = () => open(i.url, "_blank", "noopener");
+        if (i.url) hit.onclick = () => window.open(i.url, "_blank", "noopener");
       });
-      y += l.rows * (rowH + 4) + laneGap * 2;
-      svgEl("line", { x1: padL, x2: W - padR, y1: y - laneGap, y2: y - laneGap, stroke: "var(--grid)" }, svg);
+      y += l.rows * l.rowH + laneGap;
+      svgEl("line", { x1: 0, x2: W, y1: y - laneGap / 2, y2: y - laneGap / 2, stroke: "var(--rule)" }, svg);
     });
-    svgEl("line", { x1: padL, x2: W - padR, y1: H - 20, y2: H - 20, stroke: "var(--axis)" }, svg);
   }
 
-  function renderYearly(list) {
-    const box = $("yearly");
+  // ---- カレンダー ----
+  function renderCalendar(list) {
+    const box = $("calendar");
     box.innerHTML = "";
-    const shown = products.filter(p => active.has(p) && list.some(i => i.product === p));
-    $("legend").innerHTML = shown.length > 1
-      ? shown.map(p => `<span><i class="sw" style="background:${color(p)}"></i>${esc(label(p))}</span>`).join("") : "";
-    if (!list.length) { box.innerHTML = '<p class="empty">該当するデータがありません</p>'; return; }
+    const [x0] = span(list);
+    const y0 = new Date(x0).getFullYear(), yNow = new Date(NOW).getFullYear();
+    const cell = 11, gap = 2, pitch = cell + gap, padL = 56, monthH = 16, yearH = 7 * pitch + 14;
+    const years = []; for (let yr = yNow; yr >= y0; yr--) years.push(yr);
+    const W = padL + 54 * pitch, H = years.length * (yearH + monthH);
+    const svg = svgEl("svg", { width: W, height: H, role: "img", "aria-label": "日ごとのカレンダー" }, box);
 
-    const ys = list.map(i => new Date(i.b).getFullYear());
-    const years = [];
-    for (let yr = Math.min(...ys); yr <= Math.max(...ys); yr++) years.push(yr);
-    const counts = years.map(yr => shown.map(p => list.filter(i => i.product === p && new Date(i.b).getFullYear() === yr).length));
-    const max = Math.max(...counts.map(c => c.reduce((a, b) => a + b, 0)), 1);
-    const W = Math.max(box.parentElement.clientWidth, 320), H = 220, padL = 32, padB = 24, padT = 16;
-    const band = (W - padL) / years.length, bw = Math.min(48, band * 0.6);
-    const sy = v => (H - padB) - v / max * (H - padB - padT);
-    const svg = svgEl("svg", { width: W, height: H, role: "img", "aria-label": "年別の件数" }, box);
-
-    const tickStep = Math.max(1, Math.ceil(max / 4));
-    for (let v = 0; v <= max; v += tickStep) {
-      svgEl("line", { x1: padL, x2: W, y1: sy(v), y2: sy(v), stroke: v ? "var(--grid)" : "var(--axis)" }, svg);
-      const t = svgEl("text", { x: padL - 6, y: sy(v) + 4, "text-anchor": "end" }, svg);
-      t.textContent = v;
-    }
-    years.forEach((yr, yi) => {
-      const cx = padL + band * yi + band / 2;
-      let acc = 0;
-      const total = counts[yi].reduce((a, b) => a + b, 0);
-      shown.forEach((p, pi) => {
-        const c = counts[yi][pi];
-        if (!c) return;
-        const top = sy(acc + c), bottom = sy(acc);
-        const isTop = acc + c === total;
-        const h = Math.max(bottom - top - 2, 1);
-        // 一番上の段だけ角丸、段の間に 2px の隙間
-        svgEl("path", { d: roundedTop(cx - bw / 2, top, bw, h, isTop ? 4 : 0), fill: color(p) }, svg);
-        acc += c;
-      });
-      const hit = svgEl("rect", { x: cx - band / 2, y: padT, width: band, height: H - padB - padT, fill: "transparent", class: "hit" }, svg);
-      hit.onmousemove = ev => {
-        tip.innerHTML = `<b>${yr}年：${total}件</b><div class="d">${shown.map((p, pi) => counts[yi][pi] ? `${esc(label(p))}　${counts[yi][pi]}件` : "").filter(Boolean).join("<br>")}</div>`;
-        tip.style.display = "block";
-        tip.style.left = Math.min(ev.clientX + 12, innerWidth - tip.offsetWidth - 8) + "px";
-        tip.style.top = ev.clientY + 16 + "px";
-      };
-      hit.onmouseleave = hideTip;
-      const tl = svgEl("text", { x: cx, y: sy(total) - 4, "text-anchor": "middle" }, svg);
-      tl.textContent = total;
-      const t = svgEl("text", { x: cx, y: H - 6, "text-anchor": "middle" }, svg);
-      t.textContent = yr;
+    // 日ごとに該当するものを集める
+    const byDay = new Map();
+    list.forEach(i => {
+      const s = new Date(i.b); s.setHours(0, 0, 0, 0);
+      for (let t = s.getTime(); t <= (i.e ?? NOW); t += DAY) {
+        const k = new Date(t).toDateString();
+        (byDay.get(k) || byDay.set(k, []).get(k)).push(i);
+      }
     });
-  }
-  function roundedTop(x, y, w, h, r) {
-    r = Math.min(r, h, w / 2);
-    return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+
+    years.forEach((yr, yi) => {
+      const oy = yi * (yearH + monthH) + monthH;
+      const yt = svgEl("text", { x: 0, y: oy + 12, class: "year" }, svg); yt.textContent = yr;
+      const jan1 = new Date(yr, 0, 1), off = jan1.getDay();
+      for (let m = 0; m < 12; m++) {
+        const first = new Date(yr, m, 1);
+        const col = Math.floor((Math.round((first - jan1) / DAY) + off) / 7);
+        const t = svgEl("text", { x: padL + col * pitch, y: oy - 4 }, svg); t.textContent = `${m + 1}月`;
+      }
+      for (let d = new Date(jan1); d.getFullYear() === yr; d.setDate(d.getDate() + 1)) {
+        const idx = Math.round((d - jan1) / DAY) + off;
+        const x = padL + Math.floor(idx / 7) * pitch, y = oy + (idx % 7) * pitch;
+        const hits = byDay.get(d.toDateString()) || [];
+        const future = d.getTime() > NOW;
+        const top = hits.slice().sort((a, b) => PRIORITY.indexOf(a.product) - PRIORITY.indexOf(b.product))[0];
+        const r = svgEl("rect", { x, y, width: cell, height: cell, rx: 2,
+          fill: top ? color(top.product) : future ? "transparent" : "var(--empty)",
+          ...(future && !top ? { stroke: "var(--rule)" } : {}) }, svg);
+        if (hits.length) {
+          const date = fmt(d);
+          r.classList.add("hit");
+          r.onmousemove = ev => showTip(ev, `<b>${date}</b>` + hits.map(i => `<span class="d">${esc(label(i.product))}：${esc(i.title)}</span>`).join("<br>"));
+          r.onmouseleave = hideTip;
+        }
+      }
+    });
+    const shown = products.filter(p => active.has(p));
+    $("cal-legend").innerHTML = shown.map(p => `<span><i class="sw sq" style="background:${color(p)}"></i>${esc(label(p))}</span>`).join("")
+      + `<span><i class="sw sq" style="background:var(--empty)"></i>なし</span>`
+      + (shown.length > 1 ? `<span>重なった日は ランキング → インデックス登録 → クロール → 表示 の順で色を付けています</span>` : "");
   }
 
+  // ---- 一覧 ----
   function renderTable(list) {
     const rows = [...list].sort((a, b) => b.b - a.b).map(i => `<tr>
       <td class="n">${fmt(i.b)}</td>
-      <td class="n">${i.e ? fmt(i.e) : '<span class="ongoing">継続中</span>'}</td>
-      <td class="n">${days(i).toFixed(1)}</td>
-      <td><span class="sw" style="background:${color(i.product)}"></span> ${esc(label(i.product))}</td>
+      <td class="n">${i.e ? fmt(i.e) : '<span class="ongoing">進行中</span>'}</td>
+      <td class="n">${days(i).toFixed(1)}日</td>
+      <td><span class="cat"><span class="sw" style="background:${color(i.product)}"></span>${esc(label(i.product))}</span></td>
       <td>${i.url ? `<a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a>` : esc(i.title)}</td>
     </tr>`).join("");
-    $("table").innerHTML = `<thead><tr><th>開始</th><th>終了</th><th>日数</th><th>カテゴリ</th><th>内容</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">該当するデータがありません</td></tr>'}</tbody>`;
+    $("list-summary").textContent = `${list.length}件`;
+    $("table").innerHTML = `<thead><tr><th>開始</th><th>終了</th><th>期間</th><th>カテゴリ</th><th>内容</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">条件に合う記録はありません</td></tr>'}</tbody>`;
+  }
+
+  // ---- 検索の仕組み ----
+  const STAGES = [
+    {
+      key: "Crawling", step: "STEP 1", what: "Googlebot が URL を見つけ、ページを取りに行き、表示の形に組み立てる段階です。",
+      sub: ["発見", "フェッチ", "レンダリング"],
+      detail: {
+        happens: "リンクやサイトマップから URL を見つけ（発見）、サーバーにリクエストしてページを受け取り（フェッチ）、最新の Chrome 相当の環境で JavaScript を実行して実際の見た目を組み立てます（レンダリング）。サーバーが 5xx や 429 を返すと、Google はクロールの頻度を自動で下げます。",
+        terms: [
+          ["robots.txt", "クロールさせない場所を指定するファイル。インデックス登録を防ぐ仕組みではないので、ブロックした URL が中身なしで登録されることがあります。"],
+          ["クロールバジェット", "Google がそのサイトに使うクロールの量。数万ページ以上の大規模サイトで気にするもので、多くのサイトでは意識しなくて大丈夫です。"],
+          ["フェッチとレンダリング", "フェッチは HTML を受け取るだけ。JavaScript で作られる内容は、レンダリングを経て初めて Google に見えます。"],
+        ],
+        impact: "新しいページや更新が Google に気付かれるまで時間がかかります。クロールの統計情報でリクエスト数が一時的に減ることがあります。",
+        console: ["設定 › クロールの統計情報", "URL 検査 › 公開 URL をテスト", "サイトマップ"],
+      },
+    },
+    {
+      key: "Indexing", step: "STEP 2", what: "取得したページの中身を読み取り、Google のデータベースに登録する段階です。",
+      sub: ["内容の解析", "重複の判定", "登録"],
+      detail: {
+        happens: "テキスト、title、画像、構造化データなどを解析します。似たページが複数あればグループにまとめ、代表の URL（正規 URL）を選びます。クロールされたページがすべて登録されるわけではありません。",
+        terms: [
+          ["canonical（正規 URL）", "重複するページのうち、検索結果に出す代表の URL。サイト側は rel=canonical で希望を伝えられますが、最終的には Google が決めます。"],
+          ["noindex", "ページを検索結果に出さない指定。Google がそのページをクロールできないと noindex も読めないので、robots.txt でブロックすると逆効果です。"],
+          ["検出 / クロール済み - インデックス未登録", "前者は URL を知っているがまだ取りに行っていない状態、後者は取りに行ったが登録を見送った状態です。"],
+        ],
+        impact: "新しい記事が検索に出るまでが遅れます。インデックス登録レポートの数字が一時的に揺れることがあります。",
+        console: ["インデックス作成 › ページ", "URL 検査 › インデックス登録をリクエスト"],
+      },
+    },
+    {
+      key: "Serving", step: "STEP 3", what: "検索された瞬間に、登録済みのページから結果を取り出して画面に出す段階です。",
+      sub: ["検索結果", "スニペット", "リッチリザルト"],
+      detail: {
+        happens: "ユーザーが検索すると、Google はインデックスから合いそうなページを取り出し、タイトルやスニペット、リッチリザルトなどの形で表示します。ここで障害が起きると、ページの登録や順位とは関係なく、結果がうまく出なくなります。",
+        terms: [
+          ["スニペット", "検索結果でタイトルの下に出る説明文。meta description を参考にしつつ、Google が本文から作ることもあります。"],
+          ["リッチリザルト", "星の評価やよくある質問など、構造化データをもとにした装飾つきの表示です。"],
+        ],
+        impact: "多くのサイトで表示回数やクリック数が同じ日に一斉に落ち、障害の解消後に戻ります。自社だけの問題ではないので、慌てて手を入れないことが大切です。",
+        console: ["検索パフォーマンス（日別で谷を確認）", "拡張（リッチリザルトの各レポート）"],
+      },
+    },
+    {
+      key: "Ranking", step: "STEP 4", what: "候補のページを、関連性や品質などで並べる段階です。アップデートが入るのはここです。",
+      sub: ["コアアップデート", "スパムアップデート"],
+      detail: {
+        happens: "ランキングシステムは、検索語との関連性、内容の質、使いやすさ、ユーザーの場所や言語などを合わせて順位を決めます。コアアップデートは年に数回入る大きな見直しで、展開には2週間ほどかかることがあります。",
+        terms: [
+          ["コアアップデート", "ランキングの中心的な仕組みの見直し。特定のサイトを狙ったものではなく、順位が下がっても「違反」ではありません。"],
+          ["スパムアップデート", "スパムを見分ける仕組みの改善。ガイドラインに反するサイトが影響を受けます。"],
+          ["E-E-A-T", "経験・専門性・権威性・信頼性。品質評価者が使う考え方で、これ自体が直接の順位要因というわけではありません。"],
+        ],
+        impact: "展開中は順位が日々上下します。Google は、展開が完了して1週間ほど経ってから、展開前の同じ長さの期間と比べることを勧めています。",
+        console: ["検索パフォーマンス › 日付 › 比較", "ページ別・クエリ別に下がったものを絞り込む"],
+      },
+    },
+  ];
+  let currentStage = "Ranking";
+  function renderFlow() {
+    $("flow").innerHTML = STAGES.map(s => {
+      const n = all.filter(i => i.product === s.key).length;
+      return `<button class="stage" type="button" data-key="${s.key}" aria-current="${s.key === currentStage}">
+        <span class="step">${s.step}</span>
+        <span class="name"><span class="sw" style="background:${color(s.key)}"></span>${esc(label(s.key))}</span>
+        <span class="what">${esc(s.what)}</span>
+        <span class="sub">${s.sub.map(x => `<span>${esc(x)}</span>`).join("")}</span>
+        <span class="count">記録 ${n}件</span>
+      </button>`;
+    }).join("");
+    $("flow").querySelectorAll(".stage").forEach(b => b.onclick = () => {
+      currentStage = b.dataset.key;
+      active.clear(); active.add(currentStage);
+      renderFlow(); render();
+    });
+    const s = STAGES.find(x => x.key === currentStage).detail;
+    $("detail").innerHTML = `
+      <div><h3>何が起きているか</h3><p>${esc(s.happens)}</p></div>
+      <div><h3>覚えたい用語</h3><dl>${s.terms.map(([t, d]) => `<dt>${esc(t)}</dt><dd>${esc(d)}</dd>`).join("")}</dl></div>
+      <div><h3>障害やアップデートのとき</h3><p>${esc(s.impact)}</p>
+        <h3 style="margin-top:16px">Search Console で見る場所</h3><ul>${s.console.map(c => `<li class="path">${esc(c)}</li>`).join("")}</ul></div>`;
   }
 
   function render() {
+    Object.entries(chipEls).forEach(([p, b]) => b.setAttribute("aria-pressed", active.has(p)));
     const list = filtered();
-    renderTiles(list);
     renderTimeline(list);
-    renderYearly(list);
+    renderCalendar(list);
     renderTable(list);
   }
   let rt;
   addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 150); });
+  renderFlow();
   render();
+  document.fonts && document.fonts.ready.then(render);
 })();
 </script>
 </body>
