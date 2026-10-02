@@ -143,6 +143,35 @@ td .cat { display: inline-flex; align-items: center; gap: 6px; white-space: nowr
 .ongoing { color: var(--live); font-weight: 700; }
 details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; margin-bottom: 10px; }
 
+.title-btn { font: inherit; color: inherit; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: var(--rule-strong); text-underline-offset: 3px; }
+.title-btn:hover { text-decoration-color: currentColor; }
+#panel {
+  position: fixed; z-index: 20; top: 0; right: 0; bottom: 0; width: min(440px, 100%);
+  background: var(--paper); color: var(--ink); border-left: 1px solid var(--rule-strong);
+  box-shadow: -8px 0 24px rgba(0,0,0,.12); overflow-y: auto;
+  padding: calc(20px + env(safe-area-inset-top, 0px)) 22px calc(28px + env(safe-area-inset-bottom, 0px));
+  display: grid; align-content: start; gap: 18px;
+}
+#panel[hidden] { display: none; }
+#panel .close { justify-self: end; font: inherit; font-size: 13px; color: var(--ink-2); background: transparent; border: 1px solid var(--rule-strong); border-radius: 4px; padding: 2px 10px; cursor: pointer; }
+#panel .cat { display: inline-flex; align-items: center; gap: 7px; font: 700 12px var(--display); color: var(--ink-2); letter-spacing: .06em; }
+#panel h3 { font: 700 20px/1.4 var(--display); margin: 4px 0 0; text-wrap: balance; }
+#panel .facts { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0; font-size: 13px; }
+#panel .facts dt { color: var(--muted); }
+#panel .facts dd { margin: 0; font-family: var(--mono); }
+#panel h4 { font: 700 13px var(--display); letter-spacing: .08em; color: var(--muted); margin: 0 0 8px; }
+#panel ol.log { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--rule); display: grid; gap: 14px; }
+#panel ol.log li { position: relative; font-size: 14px; }
+#panel ol.log li::before { content: ""; position: absolute; left: -20px; top: 7px; width: 10px; height: 10px; border-radius: 50%; background: var(--paper); border: 2px solid var(--rule-strong); }
+#panel ol.log li.last::before { background: var(--ink-2); border-color: var(--ink-2); }
+#panel ol.log time { display: block; font: 12px var(--mono); color: var(--muted); }
+#panel ol.log .st { font: 700 11px var(--display); color: var(--ink-2); border: 1px solid var(--rule-strong); border-radius: 3px; padding: 0 5px; margin-left: 6px; }
+#panel ol.log p { margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+#panel .note { font-size: 14px; color: var(--ink-2); margin: 0; }
+#panel ul { margin: 6px 0 0; padding-left: 1.1em; font: 12px var(--mono); color: var(--ink-2); }
+#panel .others { display: flex; flex-wrap: wrap; gap: 6px; }
+#panel .others button { font: inherit; font-size: 12px; color: var(--ink); background: var(--bg); border: 1px solid var(--rule); border-radius: 4px; padding: 2px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+#panel .official { font-size: 13px; }
 #tip {
   position: fixed; pointer-events: none; z-index: 10; max-width: 300px;
   background: var(--ink); color: var(--bg); border-radius: 6px; padding: 8px 10px; font-size: 12px; line-height: 1.5;
@@ -167,7 +196,7 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; margin-
   </header>
 
   <section id="timeline-sec">
-    <div class="sec-head"><h2>年表</h2><p>バーは開始から終了まで。点線は進行中です。</p></div>
+    <div class="sec-head"><h2>年表</h2><p>バーは開始から終了まで。点線は進行中です。押すと Google の発表の経過が開きます。</p></div>
     <div class="filters">
       <div class="chips" id="chips" role="group" aria-label="カテゴリ"></div>
       <label>期間
@@ -184,7 +213,7 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; margin-
   </section>
 
   <section id="calendar-sec">
-    <div class="sec-head"><h2>カレンダー</h2><p>1マスが1日です。色が付いた日は、何かが展開中または発生中でした。</p></div>
+    <div class="sec-head"><h2>カレンダー</h2><p>1マスが1日です。色が付いた日は、何かが展開中または発生中でした。押すとその日の記録が開きます。</p></div>
     <div class="scroll"><div id="calendar"></div></div>
     <div class="legend" id="cal-legend"></div>
   </section>
@@ -222,6 +251,7 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; margin-
   </section>
 </main>
 <div id="tip" role="tooltip"></div>
+<aside id="panel" hidden aria-label="詳細" tabindex="-1"></aside>
 
 <script src="data/incidents.js"></script>
 <script>
@@ -382,7 +412,7 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; margin-
         const hit = svgEl("rect", { x: hx - 3, y: by, width: hw + 6, height: l.rowH, fill: "transparent", class: "hit" }, svg);
         hit.onmousemove = ev => showTip(ev, incTip(i));
         hit.onmouseleave = hideTip;
-        if (i.url) hit.onclick = () => window.open(i.url, "_blank", "noopener");
+        hit.onclick = () => openDetail(i);
       });
       y += l.rows * l.rowH + laneGap;
       svgEl("line", { x1: 0, x2: W, y1: y - laneGap / 2, y2: y - laneGap / 2, stroke: "var(--rule)" }, svg);
@@ -433,6 +463,7 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; margin-
           r.classList.add("hit");
           r.onmousemove = ev => showTip(ev, `<b>${date}</b>` + hits.map(i => `<span class="d">${esc(label(i.product))}：${esc(i.title)}</span>`).join("<br>"));
           r.onmouseleave = hideTip;
+          r.onclick = () => openDetail(top, hits, date);
         }
       }
     });
@@ -449,10 +480,11 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; margin-
       <td class="n">${i.e ? fmt(i.e) : '<span class="ongoing">進行中</span>'}</td>
       <td class="n">${days(i).toFixed(1)}日</td>
       <td><span class="cat"><span class="sw" style="background:${color(i.product)}"></span>${esc(label(i.product))}</span></td>
-      <td>${i.url ? `<a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a>` : esc(i.title)}</td>
+      <td><button type="button" class="title-btn" data-id="${esc(i.id)}">${esc(i.title)}</button></td>
     </tr>`).join("");
     $("list-summary").textContent = `${list.length}件`;
     $("table").innerHTML = `<thead><tr><th>開始</th><th>終了</th><th>期間</th><th>カテゴリ</th><th>内容</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">条件に合う記録はありません</td></tr>'}</tbody>`;
+    $("table").querySelectorAll(".title-btn").forEach(b => b.onclick = () => openDetail(all.find(i => i.id === b.dataset.id)));
   }
 
   // ---- 検索の仕組み ----
@@ -537,6 +569,54 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; margin-
       <div><h3>障害やアップデートのとき</h3><p>${esc(s.impact)}</p>
         <h3 style="margin-top:16px">Search Console で見る場所</h3><ul>${s.console.map(c => `<li class="path">${esc(c)}</li>`).join("")}</ul></div>`;
   }
+
+  // ---- 詳細パネル（何がいつどう変わったか） ----
+  const panel = $("panel");
+  const STATUS_JA = { AVAILABLE: "解決", SERVICE_INFORMATION: "お知らせ", SERVICE_DISRUPTION: "障害", SERVICE_OUTAGE: "停止", RESOLVED: "解決" };
+  const fmtTime = t => new Date(t).toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+  const linkify = s => esc(s).replace(/https?:\/\/[^\s<]+[^\s<.,)」]/g, u => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`);
+  let lastFocus = null;
+  function openDetail(i, sameDay = [], date = null) {
+    if (!i) return;
+    hideTip();
+    lastFocus = lastFocus || document.activeElement;
+    const ups = (i.updates || []).filter(u => u.text).sort((a, b) => Date.parse(a.when) - Date.parse(b.when));
+    const stage = STAGES.find(s => s.key === i.product);
+    const others = sameDay.filter(o => o !== i);
+    panel.innerHTML = `
+      <button type="button" class="close" id="panel-close">閉じる</button>
+      <div>
+        <span class="cat"><span class="sw" style="background:${color(i.product)}"></span>${esc(label(i.product))}</span>
+        <h3>${esc(i.title)}</h3>
+      </div>
+      <dl class="facts">
+        <dt>開始</dt><dd>${fmtTime(i.b)}</dd>
+        <dt>終了</dt><dd>${i.e ? fmtTime(i.e) : '<span class="ongoing">進行中</span>'}</dd>
+        <dt>期間</dt><dd>${days(i).toFixed(1)}日${i.e ? "" : "（継続中）"}</dd>
+      </dl>
+      <div>
+        <h4>Google の発表の経過</h4>
+        ${ups.length
+          ? `<ol class="log">${ups.map((u, k) => `<li class="${k === ups.length - 1 ? "last" : ""}"><time>${fmtTime(u.when)}${u.status ? `<span class="st">${esc(STATUS_JA[u.status] || u.status)}</span>` : ""}</time><p>${linkify(u.text)}</p></li>`).join("")}</ol>`
+          : `<p class="note">この記録には発表の経過が含まれていません。公式ページで確認してください。</p>`}
+      </div>
+      ${stage ? `<div><h4>この段階で自社サイトに出やすいこと</h4><p class="note">${esc(stage.detail.impact)}</p>
+        <ul>${stage.detail.console.map(c => `<li>${esc(c)}</li>`).join("")}</ul></div>` : ""}
+      ${others.length ? `<div><h4>${esc(date)} のほかの記録</h4><div class="others">${others.map((o, k) =>
+        `<button type="button" data-k="${k}"><span class="sw" style="background:${color(o.product)}"></span>${esc(o.title)}</button>`).join("")}</div></div>` : ""}
+      ${i.url ? `<p class="official"><a href="${esc(i.url)}" target="_blank" rel="noopener">Google 検索ステータスの公式ページを開く</a></p>` : ""}`;
+    panel.hidden = false;
+    panel.scrollTop = 0;
+    $("panel-close").onclick = closeDetail;
+    panel.querySelectorAll(".others button").forEach(b => b.onclick = () => openDetail(others[b.dataset.k], sameDay, date));
+    panel.focus();
+  }
+  function closeDetail() {
+    panel.hidden = true;
+    lastFocus && lastFocus.focus && lastFocus.focus();
+    lastFocus = null;
+  }
+  addEventListener("keydown", e => { if (e.key === "Escape" && !panel.hidden) closeDetail(); });
 
   function render() {
     Object.entries(chipEls).forEach(([p, b]) => b.setAttribute("aria-pressed", active.has(p)));
