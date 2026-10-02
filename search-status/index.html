@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>検索ステータス履歴</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11,11,11,0.10);
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4;
+  --critical: #d03b3b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--page); color: var(--ink);
+  font: 14px/1.6 system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 15px; margin: 0 0 12px; }
+.meta { color: var(--ink-2); font-size: 12px; margin: 0 0 20px; }
+.meta a, td a { color: inherit; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 16px; }
+.filters label { font-size: 13px; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
+select, input[type=search] {
+  font: inherit; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font: inherit; font-size: 13px; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.chip[aria-pressed="false"] { color: var(--muted); }
+.chip[aria-pressed="false"] .sw { opacity: .25; }
+.sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.tile .v { font-size: 28px; font-weight: 600; line-height: 1.2; }
+.tile .l { font-size: 12px; color: var(--ink-2); }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--ink-2); margin-bottom: 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.scroll { overflow-x: auto; }
+svg text { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+svg .lane { fill: var(--ink-2); font-size: 12px; }
+svg .hit { cursor: pointer; }
+.empty { color: var(--ink-2); padding: 24px 0; text-align: center; }
+#tip {
+  position: fixed; pointer-events: none; z-index: 10; max-width: 320px;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.15);
+  display: none;
+}
+#tip b { display: block; margin-bottom: 2px; }
+#tip .d { color: var(--ink-2); }
+table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { color: var(--ink-2); font-weight: 600; white-space: nowrap; }
+td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ongoing { color: var(--critical); font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Google 検索ステータス 履歴ビューア</h1>
+  <p class="meta" id="meta">読み込み中…</p>
+
+  <div class="filters">
+    <div class="chips" id="chips" role="group" aria-label="カテゴリ"></div>
+    <label>期間
+      <select id="range">
+        <option value="all">全期間</option>
+        <option value="365">直近1年</option>
+        <option value="730" selected>直近2年</option>
+        <option value="1095">直近3年</option>
+      </select>
+    </label>
+    <label>キーワード <input type="search" id="q" placeholder="core, spam など"></label>
+  </div>
+
+  <div class="tiles" id="tiles"></div>
+
+  <section class="card">
+    <h2>タイムライン（開始〜終了）</h2>
+    <div class="scroll"><div id="timeline"></div></div>
+  </section>
+
+  <section class="card">
+    <h2>年別の件数</h2>
+    <div class="legend" id="legend"></div>
+    <div class="scroll"><div id="yearly"></div></div>
+  </section>
+
+  <section class="card">
+    <h2>一覧</h2>
+    <div class="scroll"><table id="table"></table></div>
+  </section>
+</main>
+<div id="tip"></div>
+
+<script src="data/incidents.js"></script>
+<script>
+(() => {
+  const DATA = window.STATUS_DATA || { incidents: [] };
+  const DAY = 864e5;
+  const NOW = Date.now();
+
+  // カテゴリ名 → 表示名と色（色はカテゴリに固定。フィルタしても塗り替えない）
+  const KNOWN = [
+    ["Ranking", "ランキング"],
+    ["Crawling", "クロール"],
+    ["Indexing", "インデックス登録"],
+    ["Serving", "検索結果の表示"],
+  ];
+  const label = p => (KNOWN.find(k => k[0].toLowerCase() === String(p).toLowerCase()) || [p, p])[1];
+  const all = DATA.incidents.map(i => ({
+    ...i,
+    b: Date.parse(i.begin),
+    e: i.end ? Date.parse(i.end) : null,
+  })).filter(i => !isNaN(i.b));
+
+  const products = [...new Set(all.map(i => i.product))].sort((a, b) => {
+    const ia = KNOWN.findIndex(k => k[0] === a), ib = KNOWN.findIndex(k => k[0] === b);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || String(a).localeCompare(b);
+  });
+  // 5色を超えるカテゴリは同じ「その他」色にまとめる
+  const color = p => `var(--s${Math.min(products.indexOf(p), 4) + 1})`;
+
+  const params = new URLSearchParams(location.search);
+  const want = params.get("product");
+  const active = new Set(products.filter(p => !want || p.toLowerCase() === want.toLowerCase()
+    || all.some(i => i.product === p && i.product_id === want)));
+  if (!active.size) products.forEach(p => active.add(p));
+
+  const $ = id => document.getElementById(id);
+  const fmt = t => new Date(t).toLocaleDateString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit" });
+  const days = i => ((i.e ?? NOW) - i.b) / DAY;
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  $("meta").innerHTML = DATA.fetched_at
+    ? `最終取得: ${new Date(DATA.fetched_at).toLocaleString("ja-JP")}　｜　出典: <a href="https://status.search.google.com/?hl=ja" target="_blank" rel="noopener">Google 検索ステータス ダッシュボード</a>`
+    : "まだデータがありません。GitHub Actions の「Update Google Search Status data」を手動実行してください。";
+
+  // カテゴリのチップ
+  products.forEach(p => {
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.innerHTML = `<span class="sw" style="background:${color(p)}"></span>${esc(label(p))}`;
+    b.setAttribute("aria-pressed", active.has(p));
+    b.onclick = () => {
+      active.has(p) ? active.delete(p) : active.add(p);
+      b.setAttribute("aria-pressed", active.has(p));
+      render();
+    };
+    $("chips").append(b);
+  });
+  $("range").onchange = render;
+  $("q").oninput = render;
+
+  const tip = $("tip");
+  function showTip(ev, i) {
+    tip.innerHTML = `<b>${esc(i.title)}</b><div class="d">${esc(label(i.product))}<br>${fmt(i.b)} 〜 ${i.e ? fmt(i.e) : "継続中"}（${days(i).toFixed(1)}日）</div>`;
+    tip.style.display = "block";
+    const x = Math.min(ev.clientX + 12, innerWidth - tip.offsetWidth - 8);
+    const y = ev.clientY + 16 + tip.offsetHeight > innerHeight ? ev.clientY - tip.offsetHeight - 12 : ev.clientY + 16;
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  }
+  const hideTip = () => tip.style.display = "none";
+
+  function filtered() {
+    const r = $("range").value;
+    const from = r === "all" ? -Infinity : NOW - r * DAY;
+    const q = $("q").value.trim().toLowerCase();
+    return all.filter(i => active.has(i.product) && (i.e ?? NOW) >= from
+      && (!q || (i.title + " " + (i.updates || []).map(u => u.text).join(" ")).toLowerCase().includes(q)));
+  }
+
+  function svgEl(tag, attrs, parent) {
+    const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    parent && parent.append(el);
+    return el;
+  }
+
+  function renderTiles(list) {
+    const done = list.filter(i => i.e);
+    const avg = done.length ? done.reduce((s, i) => s + days(i), 0) / done.length : 0;
+    const ongoing = list.filter(i => !i.e).length;
+    const rank = list.filter(i => i.product === "Ranking").length;
+    $("tiles").innerHTML = [
+      [list.length, "件（表示中）"],
+      [rank, "ランキング関連"],
+      [done.length ? avg.toFixed(1) + "日" : "–", "平均の期間"],
+      [ongoing, ongoing ? "継続中" : "継続中のもの"],
+    ].map(([v, l]) => `<div class="card tile"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+  }
+
+  function renderTimeline(list) {
+    const box = $("timeline");
+    box.innerHTML = "";
+    if (!list.length) { box.innerHTML = '<p class="empty">該当するデータがありません</p>'; return; }
+    const r = $("range").value;
+    const x0 = r === "all" ? Math.min(...list.map(i => i.b)) : NOW - r * DAY;
+    const x1 = NOW;
+    const W = Math.max(box.parentElement.clientWidth, 640), padL = 112, padR = 12, laneGap = 10, rowH = 14;
+
+    // カテゴリごとに、重なる期間を別の段に詰める
+    const lanes = products.filter(p => active.has(p)).map(p => {
+      const rows = [];
+      list.filter(i => i.product === p).sort((a, b) => a.b - b.b).forEach(i => {
+        let k = rows.findIndex(end => end + DAY < i.b);
+        if (k < 0) { k = rows.length; rows.push(0); }
+        rows[k] = i.e ?? NOW; i._row = k;
+      });
+      return { p, rows: Math.max(rows.length, 1) };
+    }).filter(l => list.some(i => i.product === l.p));
+
+    const H = 24 + lanes.reduce((s, l) => s + l.rows * (rowH + 4) + laneGap * 2, 0);
+    const sx = t => padL + (Math.max(t, x0) - x0) / (x1 - x0) * (W - padL - padR);
+    const svg = svgEl("svg", { width: W, height: H, role: "img", "aria-label": "インシデントのタイムライン" }, box);
+
+    // 年・月の目盛り
+    const spanYears = (x1 - x0) / DAY / 365;
+    const d = new Date(x0); d.setDate(1); d.setHours(0, 0, 0, 0);
+    const step = spanYears > 4 ? 12 : spanYears > 1.5 ? 3 : 1;
+    d.setMonth(Math.ceil(d.getMonth() / step) * step);
+    for (; d.getTime() <= x1; d.setMonth(d.getMonth() + step)) {
+      const x = sx(d.getTime());
+      if (x < padL || x > W - padR - 28) continue;
+      svgEl("line", { x1: x, x2: x, y1: 0, y2: H - 20, stroke: "var(--grid)" }, svg);
+      const t = svgEl("text", { x: x + 3, y: H - 6 }, svg);
+      t.textContent = d.getMonth() === 0 || step === 12 ? `${d.getFullYear()}` : `${d.getMonth() + 1}月`;
+    }
+
+    let y = laneGap;
+    lanes.forEach(l => {
+      const t = svgEl("text", { x: 0, y: y + rowH - 2, class: "lane" }, svg);
+      t.textContent = label(l.p);
+      list.filter(i => i.product === l.p).forEach(i => {
+        const bx = sx(i.b), ex = sx(i.e ?? NOW), by = y + i._row * (rowH + 4);
+        const w = Math.max(ex - bx, 4);
+        svgEl("rect", { x: bx, y: by, width: w, height: rowH, rx: 4, fill: color(l.p),
+          stroke: "var(--surface)", "stroke-width": 1, ...(i.e ? {} : { "stroke-dasharray": "3 2" }) }, svg);
+        const hit = svgEl("rect", { x: bx - 3, y: by - 2, width: w + 6, height: rowH + 4, fill: "transparent", class: "hit" }, svg);
+        hit.onmousemove = ev => showTip(ev, i);
+        hit.onmouseleave = hideTip;
+        if (i.url) hit.onclick = () => open(i.url, "_blank", "noopener");
+      });
+      y += l.rows * (rowH + 4) + laneGap * 2;
+      svgEl("line", { x1: padL, x2: W - padR, y1: y - laneGap, y2: y - laneGap, stroke: "var(--grid)" }, svg);
+    });
+    svgEl("line", { x1: padL, x2: W - padR, y1: H - 20, y2: H - 20, stroke: "var(--axis)" }, svg);
+  }
+
+  function renderYearly(list) {
+    const box = $("yearly");
+    box.innerHTML = "";
+    const shown = products.filter(p => active.has(p) && list.some(i => i.product === p));
+    $("legend").innerHTML = shown.length > 1
+      ? shown.map(p => `<span><i class="sw" style="background:${color(p)}"></i>${esc(label(p))}</span>`).join("") : "";
+    if (!list.length) { box.innerHTML = '<p class="empty">該当するデータがありません</p>'; return; }
+
+    const ys = list.map(i => new Date(i.b).getFullYear());
+    const years = [];
+    for (let yr = Math.min(...ys); yr <= Math.max(...ys); yr++) years.push(yr);
+    const counts = years.map(yr => shown.map(p => list.filter(i => i.product === p && new Date(i.b).getFullYear() === yr).length));
+    const max = Math.max(...counts.map(c => c.reduce((a, b) => a + b, 0)), 1);
+    const W = Math.max(box.parentElement.clientWidth, 320), H = 220, padL = 32, padB = 24, padT = 16;
+    const band = (W - padL) / years.length, bw = Math.min(48, band * 0.6);
+    const sy = v => (H - padB) - v / max * (H - padB - padT);
+    const svg = svgEl("svg", { width: W, height: H, role: "img", "aria-label": "年別の件数" }, box);
+
+    const tickStep = Math.max(1, Math.ceil(max / 4));
+    for (let v = 0; v <= max; v += tickStep) {
+      svgEl("line", { x1: padL, x2: W, y1: sy(v), y2: sy(v), stroke: v ? "var(--grid)" : "var(--axis)" }, svg);
+      const t = svgEl("text", { x: padL - 6, y: sy(v) + 4, "text-anchor": "end" }, svg);
+      t.textContent = v;
+    }
+    years.forEach((yr, yi) => {
+      const cx = padL + band * yi + band / 2;
+      let acc = 0;
+      const total = counts[yi].reduce((a, b) => a + b, 0);
+      shown.forEach((p, pi) => {
+        const c = counts[yi][pi];
+        if (!c) return;
+        const top = sy(acc + c), bottom = sy(acc);
+        const isTop = acc + c === total;
+        const h = Math.max(bottom - top - 2, 1);
+        // 一番上の段だけ角丸、段の間に 2px の隙間
+        svgEl("path", { d: roundedTop(cx - bw / 2, top, bw, h, isTop ? 4 : 0), fill: color(p) }, svg);
+        acc += c;
+      });
+      const hit = svgEl("rect", { x: cx - band / 2, y: padT, width: band, height: H - padB - padT, fill: "transparent", class: "hit" }, svg);
+      hit.onmousemove = ev => {
+        tip.innerHTML = `<b>${yr}年：${total}件</b><div class="d">${shown.map((p, pi) => counts[yi][pi] ? `${esc(label(p))}　${counts[yi][pi]}件` : "").filter(Boolean).join("<br>")}</div>`;
+        tip.style.display = "block";
+        tip.style.left = Math.min(ev.clientX + 12, innerWidth - tip.offsetWidth - 8) + "px";
+        tip.style.top = ev.clientY + 16 + "px";
+      };
+      hit.onmouseleave = hideTip;
+      const tl = svgEl("text", { x: cx, y: sy(total) - 4, "text-anchor": "middle" }, svg);
+      tl.textContent = total;
+      const t = svgEl("text", { x: cx, y: H - 6, "text-anchor": "middle" }, svg);
+      t.textContent = yr;
+    });
+  }
+  function roundedTop(x, y, w, h, r) {
+    r = Math.min(r, h, w / 2);
+    return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+  }
+
+  function renderTable(list) {
+    const rows = [...list].sort((a, b) => b.b - a.b).map(i => `<tr>
+      <td class="n">${fmt(i.b)}</td>
+      <td class="n">${i.e ? fmt(i.e) : '<span class="ongoing">継続中</span>'}</td>
+      <td class="n">${days(i).toFixed(1)}</td>
+      <td><span class="sw" style="background:${color(i.product)}"></span> ${esc(label(i.product))}</td>
+      <td>${i.url ? `<a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a>` : esc(i.title)}</td>
+    </tr>`).join("");
+    $("table").innerHTML = `<thead><tr><th>開始</th><th>終了</th><th>日数</th><th>カテゴリ</th><th>内容</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">該当するデータがありません</td></tr>'}</tbody>`;
+  }
+
+  function render() {
+    const list = filtered();
+    renderTiles(list);
+    renderTimeline(list);
+    renderYearly(list);
+    renderTable(list);
+  }
+  let rt;
+  addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 150); });
+  render();
+})();
+</script>
+</body>
+</html>
